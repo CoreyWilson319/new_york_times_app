@@ -31,12 +31,6 @@ app.get('/', (req, res)=>{
                 }
                 console.log(finalObject)
             }
-
-            // .display title
-            // .headline
-            // .byline
-            // .publication_date
-            // .link.url
         }
     })
     .catch(err => {
