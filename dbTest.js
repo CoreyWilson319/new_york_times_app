@@ -12,4 +12,6 @@ db.movie.findOrCreate({
 }).then(([movie, created]) => {
     console.log(created)
     console.log(movie);
-});
+}).catch(error => {
+    console.log(error)
+})

@@ -9,6 +9,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const NYT_API_KEY = process.env.NYT_API_KEY;
 
+// Database
+const db = require('./models');
+
 // Set up EJS engine
 app.set('view engine', 'ejs');
 app.use(ejsLayouts);
@@ -29,7 +32,21 @@ app.get('/', (req, res)=>{
                     date: movieResultObject.publication_date,
                     link: movieResultObject.link.url,
                 }
-                console.log(finalObject)
+
+                // Adding each movie to the database inside of (movies)
+                // Also checks if a movie title is already inside prior to adding I belive
+                db.movie.findOrCreate({
+                    where: { title: finalObject.title },
+                    defaults: {
+                        byline: finalObject.byline,
+                        headline: finalObject.headline,
+                        date: finalObject.date,
+                        url: finalObject.url,
+                    }
+                }).then(([movie, created]) => {
+                    // res.send(movie.get().title);
+                    console.log(created);
+                })
             }
         }
     })
@@ -37,6 +54,55 @@ app.get('/', (req, res)=>{
         console.log(err)
     })
 });
+
+app.get('/getrocky', (req, res) => {
+    axios.get(`https://api.nytimes.com/svc/movies/v2/reviews/search.json?query=rocky&api-key=${NYT_API_KEY}`)
+    .then(response => {
+        if (response.status === 200) {
+            let len = response.data.results.length
+            for (let i = 0; i < len; i++){
+                let movieResultObject = response.data.results[i];
+                const finalObject = {
+                    title: movieResultObject.display_title,
+                    headline: movieResultObject.headline,
+                    byline: movieResultObject.byline,
+                    date: movieResultObject.publication_date,
+                    link: movieResultObject.link.url,
+                }
+
+                // Adding each movie to the database inside of (movies)
+                // Also checks if a movie title is already inside prior to adding I belive
+                db.movie.findOrCreate({
+                    where: { title: finalObject.title },
+                    defaults: {
+                        byline: finalObject.byline,
+                        headline: finalObject.headline,
+                        date: finalObject.date,
+                        url: finalObject.url,
+                    }
+                }).then(([movie, created]) => {
+                    // res.send(movie.get().title);
+                    console.log(created);
+                })
+            }
+        }
+})
+})
+
+// GODFATHER route
+app.get('/godfather', (req, res) => {
+    db.movie.findAll().then(movieArray => {
+        console.log(movieArray);
+    })
+})
+// ROCKY route
+app.get('/rocky', (req, res) => {
+    db.movie.findOne({
+        where: {title: 'Rocky II'}
+    }).then(rockyMovie => {
+        res.send(rockyMovie);
+    })
+})
 
 app.listen(PORT, () =>{
     console.log(`Server is running on PORT: ${PORT}`);
